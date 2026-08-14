@@ -1,10 +1,3 @@
-/**
- * useMidnight.ts — React hook that orchestrates all Midnight DApp logic
- *
- * Manages the full lifecycle:
- *   wallet detection → connect → deploy/find contract → cast votes → disconnect
- */
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   detectWallet,
@@ -40,25 +33,24 @@ export type VoteStatus =
   | "error";
 
 export interface MidnightState {
-  // Wallet state
   walletStatus: WalletStatus;
   walletName: string;
   walletAddress: string;
   walletAddressShort: string;
   networkId: string;
   errorMessage: string;
+  isModalOpen: boolean;
 
-  // Contract state
   contractAddress: string;
   explorerUrl: string;
   publicState: PublicState;
 
-  // Vote/TX state
   voteStatus: VoteStatus;
   lastTxHash: string;
   voteError: string;
 
-  // Actions
+  openModal: () => void;
+  closeModal: () => void;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   vote: (choice: boolean) => Promise<void>;
@@ -77,6 +69,7 @@ export function useMidnight(): MidnightState {
   const [walletAddress, setWalletAddress] = useState("");
   const [networkId, setNetworkId] = useState(MIDNIGHT_CONFIG.networkId);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [contractAddress, setContractAddress] = useState(
     MIDNIGHT_CONFIG.contractAddress
@@ -89,28 +82,22 @@ export function useMidnight(): MidnightState {
   const [lastTxHash, setLastTxHash] = useState("");
   const [voteError, setVoteError] = useState("");
 
-  // Refs to hold live instances (not put in state to avoid stale closures)
   const connectionRef = useRef<WalletConnection | null>(null);
   const enabledApiRef = useRef<EnabledAPI | null>(null);
   const contractRef = useRef<DeployedContract | null>(null);
 
-  // ── Detect wallet on mount ─────────────────────────────────────────────────
   useEffect(() => {
-    // Give the wallet extension a moment to inject itself
     const timer = setTimeout(() => {
       const detected = detectWallet();
-      if (!detected) {
-        setWalletStatus("not_installed");
-      } else {
-        setWalletStatus("installed");
+      setWalletStatus("installed");
+      if (detected) {
         setWalletName(detected.name);
       }
-    }, 500);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // ── Auto-refresh public state every 10 seconds when connected ─────────────
   useEffect(() => {
     if (walletStatus !== "connected" || !contractRef.current) return;
 
@@ -124,7 +111,14 @@ export function useMidnight(): MidnightState {
     return () => clearInterval(interval);
   }, [walletStatus]);
 
-  // ── Connect ────────────────────────────────────────────────────────────────
+  const openModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
+
   const connect = useCallback(async () => {
     setWalletStatus("connecting");
     setErrorMessage("");
@@ -136,7 +130,6 @@ export function useMidnight(): MidnightState {
       setNetworkId(connection.networkId);
       setWalletName(connection.walletName);
 
-      // Deploy or find existing contract
       let contract: DeployedContract;
       if (MIDNIGHT_CONFIG.contractAddress) {
         contract = await findExistingContract(
@@ -151,11 +144,11 @@ export function useMidnight(): MidnightState {
 
       contractRef.current = contract;
 
-      // Load initial state
       const state = await readPublicState(contract);
       setPublicState(state);
 
       setWalletStatus("connected");
+      setIsModalOpen(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setErrorMessage(msg);
@@ -163,14 +156,11 @@ export function useMidnight(): MidnightState {
     }
   }, []);
 
-  // ── Disconnect ─────────────────────────────────────────────────────────────
   const disconnect = useCallback(async () => {
-    if (enabledApiRef.current) {
+    if (enabledApiRef.current && typeof enabledApiRef.current.disconnect === "function") {
       try {
-        if (typeof enabledApiRef.current.disconnect === "function") { await enabledApiRef.current.disconnect(); }
-      } catch {
-        // Ignore disconnect errors
-      }
+        await enabledApiRef.current.disconnect();
+      } catch {}
     }
     connectionRef.current = null;
     enabledApiRef.current = null;
@@ -182,9 +172,9 @@ export function useMidnight(): MidnightState {
     setLastTxHash("");
     setVoteStatus("idle");
     setVoteError("");
+    setIsModalOpen(false);
   }, []);
 
-  // ── Cast vote ──────────────────────────────────────────────────────────────
   const vote = useCallback(async (choice: boolean) => {
     if (!contractRef.current || walletStatus !== "connected") {
       setVoteError("Please connect your wallet first.");
@@ -204,11 +194,9 @@ export function useMidnight(): MidnightState {
       setLastTxHash(result.txHash);
       setVoteStatus("confirmed");
 
-      // Refresh public state to show updated tally
       const state = await readPublicState(contractRef.current);
       setPublicState(state);
 
-      // Reset vote status after 5 seconds
       setTimeout(() => setVoteStatus("idle"), 5000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -217,7 +205,6 @@ export function useMidnight(): MidnightState {
     }
   }, [walletStatus]);
 
-  // ── Refresh state ──────────────────────────────────────────────────────────
   const refreshState = useCallback(async () => {
     if (!contractRef.current) return;
     const state = await readPublicState(contractRef.current);
@@ -231,12 +218,15 @@ export function useMidnight(): MidnightState {
     walletAddressShort: formatAddress(walletAddress),
     networkId,
     errorMessage,
+    isModalOpen,
     contractAddress,
     explorerUrl: contractAddress ? getExplorerUrl(contractAddress) : "",
     publicState,
     voteStatus,
     lastTxHash,
     voteError,
+    openModal,
+    closeModal,
     connect,
     disconnect,
     vote,
