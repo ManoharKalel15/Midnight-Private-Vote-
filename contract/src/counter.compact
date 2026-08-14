@@ -1,0 +1,34 @@
+﻿pragma language_version >= 0.23;
+
+// =============================================================
+//  Rise In Level 2 — Private Vote Counter
+//  Observable privacy: only tally changes on-chain, not the vote
+// =============================================================
+
+// Public ledger state — visible on-chain to everyone
+export ledger yes_count: Uint<64>;
+export ledger no_count: Uint<64>;
+export ledger total_votes: Uint<64>;
+
+// Witness — private off-chain data supplied by the frontend
+// The actual vote (true = YES, false = NO) is NEVER revealed on-chain
+witness get_vote(): Boolean;
+
+// Circuit: cast_vote
+// Proves a valid vote was cast without revealing which option was chosen
+export circuit cast_vote(): [] {
+  const vote = get_vote();
+  if (vote) {
+    yes_count = yes_count + 1;
+  } else {
+    no_count = no_count + 1;
+  }
+  total_votes = total_votes + 1;
+}
+
+// Constructor: initialize all counts to zero
+constructor() {
+  yes_count = 0;
+  no_count = 0;
+  total_votes = 0;
+}

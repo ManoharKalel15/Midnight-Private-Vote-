@@ -1,0 +1,8 @@
+﻿{
+  "name": "midnight-counter-contract",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "compile": "compactc src/counter.compact managed/counter"
+  }
+}
