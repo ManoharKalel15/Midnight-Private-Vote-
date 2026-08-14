@@ -167,7 +167,7 @@ export function useMidnight(): MidnightState {
   const disconnect = useCallback(async () => {
     if (enabledApiRef.current) {
       try {
-        await enabledApiRef.current.disconnect();
+        if (typeof enabledApiRef.current.disconnect === "function") { await enabledApiRef.current.disconnect(); }
       } catch {
         // Ignore disconnect errors
       }

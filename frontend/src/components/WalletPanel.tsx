@@ -38,15 +38,20 @@ export function WalletPanel({
       {walletStatus === "not_installed" && (
         <div className="wallet-state wallet-missing">
           <div className="state-icon warning">⚠</div>
-          <p>1AM Wallet extension not detected.</p>
-          <a
-            href="https://midnight.network"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-secondary"
-          >
-            Get 1AM Wallet →
-          </a>
+          <p>1AM Wallet extension not detected on page load.</p>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '8px' }}>
+            <button className="btn btn-primary btn-sm" onClick={onConnect}>
+              ⚡ Retry Connect 1AM
+            </button>
+            <a
+              href="https://midnight.network"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary btn-sm"
+            >
+              Get 1AM Extension →
+            </a>
+          </div>
         </div>
       )}
 
@@ -57,7 +62,7 @@ export function WalletPanel({
               <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/>
             </svg>
           </div>
-          <p className="state-text">Connect your {walletName} to start voting privately</p>
+          <p className="state-text">Click below to open the 1AM Wallet popup and authorize connection</p>
           <button className="btn btn-primary btn-connect" onClick={onConnect}>
             <span className="btn-glow" />
             Connect {walletName}
@@ -69,9 +74,9 @@ export function WalletPanel({
         <div className="wallet-state">
           <div className="spinner-ring" />
           <p className="state-text connecting-text">
-            Connecting to {walletName} on <strong>{networkId}</strong>…
+            Opening 1AM Wallet Popup on <strong>{networkId}</strong>…
           </p>
-          <p className="state-subtext">Approve the connection prompt in your 1AM wallet extension</p>
+          <p className="state-subtext">Please approve the connection prompt in your 1AM wallet window</p>
         </div>
       )}
 
@@ -101,7 +106,7 @@ export function WalletPanel({
           <div className="state-icon error">✕</div>
           <p className="error-text">{errorMessage}</p>
           <button className="btn btn-primary" onClick={onConnect}>
-            Try Again
+            Try Connect Again
           </button>
         </div>
       )}
