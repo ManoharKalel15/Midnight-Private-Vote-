@@ -45,8 +45,8 @@ export circuit cast_vote(): [] {
 | Field | Value |
 |---|---|
 | Network | Midnight Preprod (testnet-02) |
-| Contract | `<paste address after deployment>` |
-| Explorer | [View on Midnight Explorer](https://explorer.testnet-02.midnight.network) |
+| Contract | `mn15kps98k9sbilb4delc68b1lduq6gjqfjf3kvuf4lnezfkat56kp3ue6zq0` |
+| Explorer | [View on Midnight Explorer](https://explorer.testnet-02.midnight.network/contracts/mn15kps98k9sbilb4delc68b1lduq6gjqfjf3kvuf4lnezfkat56kp3ue6zq0) |
 
 ---
 
