@@ -10,14 +10,9 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@midnight-ntwrk/dapp-connector-api": "^0.3.4",
-    "@midnight-ntwrk/midnight-js-contracts": "^0.3.0",
-    "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "^0.3.0",
-    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "^0.3.0",
-    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "^0.3.0",
-    "@midnight-ntwrk/midnight-js-level-private-state-provider": "^0.3.0",
-    "@midnight-ntwrk/midnight-js-types": "^0.3.0",
-    "@midnight-ntwrk/midnight-js-wallet": "^0.3.0",
+    "@midnight-ntwrk/dapp-connector-api": "4.0.1",
+    "@midnight-ntwrk/midnight-js-contracts": "5.0.0-beta.6",
+    "@midnight-ntwrk/midnight-js-types": "5.0.0-beta.6",
     "rxjs": "^7.8.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
