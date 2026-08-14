@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1AM Wallet — Connection Prompt</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #fdfdfd;
+      color: #1e293b;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .oneam-header {
+      background: #0f111a;
+      color: #ffffff;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .oneam-brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+    .oneam-status-pills {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      color: #4ade80;
+      letter-spacing: 0.5px;
+    }
+    .status-pill .dot {
+      width: 6px;
+      height: 6px;
+      background: #4ade80;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #4ade80;
+    }
+    .avatar-box {
+      width: 28px;
+      height: 28px;
+      background: #ffffff;
+      color: #0f111a;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .oneam-dapp-banner {
+      background: linear-gradient(135deg, #1e1b4b, #311b92);
+      color: #fff;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .banner-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+    .banner-sub {
+      font-size: 12px;
+      color: #a78bfa;
+      font-weight: 600;
+    }
+    .approve-btn {
+      background: #8b5cf6;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+      transition: all 0.2s;
+      width: 100%;
+      text-align: center;
+    }
+    .approve-btn:hover {
+      background: #7c3aed;
+    }
+    .oneam-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .holdings-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .card-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      color: #64748b;
+    }
+    .balance-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .card-subtext {
+      font-size: 10px;
+      color: #64748b;
+      font-family: monospace;
+    }
+    .oneam-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 8px 0;
+    }
+    .action-btn {
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 9px;
+      font-weight: 700;
+      color: #475569;
+    }
+    .divider {
+      width: 1px;
+      height: 20px;
+      background: #cbd5e1;
+    }
+    .oneam-tabs {
+      display: flex;
+      border-top: 1px solid #e2e8f0;
+      background: #ffffff;
+    }
+    .tab {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 10px 0;
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-align: center;
+    }
+    .tab.active {
+      color: #0f172a;
+      border-bottom: 2px solid #0f172a;
+    }
+  </style>
+</head>
+<body>
+  <div class="oneam-header">
+    <div class="oneam-brand">
+      <span>🕒</span>
+      <span>1AM</span>
+    </div>
+    <div class="oneam-status-pills">
+      <div class="status-pill"><span class="dot"></span><span>PREV • SYNCED</span></div>
+      <div class="status-pill"><span class="dot"></span><span>DUST SPONSORED</span></div>
+    </div>
+    <div class="avatar-box">WA</div>
+  </div>
+
+  <div class="oneam-dapp-banner">
+    <div>
+      <div class="banner-title">⚡ Connection Requested</div>
+      <div class="banner-sub">Rise In — Level 2 (Midnight Vote)</div>
+    </div>
+    <button class="approve-btn" id="approveBtn">⚡ Approve 1AM Connection</button>
+  </div>
+
+  <div class="oneam-body">
+    <div class="holdings-card">
+      <div class="card-top">
+        <div class="card-label">🛡 SHIELDED HOLDINGS</div>
+        <span style="font-size:10px;color:#94a3b8">HIDE 👁</span>
+      </div>
+      <div class="balance-val">0</div>
+      <div class="card-subtext">Shielded tokens in this wallet</div>
+    </div>
+
+    <div class="holdings-card">
+      <div class="card-top">
+        <div class="card-label">⚡ UNSHIELDED BALANCE</div>
+        <span style="font-size:10px;color:#94a3b8">HIDE 👁</span>
+      </div>
+      <div class="balance-val">0.0</div>
+      <div class="card-subtext">Sum of all unshielded NIGHT tokens</div>
+    </div>
+
+    <div class="holdings-card">
+      <div class="card-top">
+        <div class="card-label">❖ CARDANO BALANCE</div>
+        <span style="font-size:10px;color:#94a3b8">HIDE 👁</span>
+      </div>
+      <div class="balance-val">0.0</div>
+      <div class="card-subtext">ADA: 0.0</div>
+    </div>
+
+    <div class="oneam-actions">
+      <div class="action-btn"><span>✈</span><span>SEND</span></div>
+      <div class="divider"></div>
+      <div class="action-btn"><span>⊞</span><span>RECEIVE</span></div>
+      <div class="divider"></div>
+      <div class="action-btn"><span>⚡</span><span>YOUR DUST</span></div>
+    </div>
+  </div>
+
+  <div class="oneam-tabs">
+    <div class="tab">ASSETS</div>
+    <div class="tab">NFTS</div>
+    <div class="tab">TRANSACTIONS</div>
+    <div class="tab active">APPS</div>
+  </div>
+
+  <script>
+    document.getElementById('approveBtn').addEventListener('click', function() {
+      this.innerText = 'Connecting...';
+      this.disabled = true;
+
+      if (window.opener) {
+        window.opener.postMessage({ type: '1AM_WALLET_POPUP_APPROVED' }, '*');
+      }
+
+      setTimeout(function() {
+        window.close();
+      }, 400);
+    });
+  </script>
+</body>
+</html>

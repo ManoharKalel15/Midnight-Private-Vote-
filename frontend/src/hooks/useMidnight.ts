@@ -83,44 +83,21 @@ export function useMidnight(): MidnightState {
   const contractRef = useRef<DeployedContract | null>(null);
   const isConnectingRef = useRef(false);
 
-  // Single detection check on mount to prevent duplicate event listeners
   useEffect(() => {
     let mounted = true;
-
     const checkWallet = () => {
       if (!mounted) return;
       const detected = detectWallet();
-      if (!detected) {
-        setWalletStatus("not_installed");
-      } else {
-        setWalletStatus("installed");
+      setWalletStatus("installed");
+      if (detected) {
         setWalletName(detected.name);
       }
     };
-
     checkWallet();
     return () => {
       mounted = false;
     };
   }, []);
-
-  // Poll contract state only when connected
-  useEffect(() => {
-    if (walletStatus !== "connected" || !contractRef.current) return;
-
-    const interval = setInterval(async () => {
-      if (contractRef.current) {
-        try {
-          const state = await readPublicState(contractRef.current);
-          setPublicState(state);
-        } catch {
-          // Ignore transient polling errors
-        }
-      }
-    }, 15_000);
-
-    return () => clearInterval(interval);
-  }, [walletStatus]);
 
   const connect = useCallback(async () => {
     if (isConnectingRef.current) return;
@@ -161,6 +138,34 @@ export function useMidnight(): MidnightState {
       isConnectingRef.current = false;
     }
   }, []);
+
+  // Listen for approval signal from 1am-wallet-popup.html window
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "1AM_WALLET_POPUP_APPROVED") {
+        console.log("[1AM Popup Window] Approval received from popup window!");
+        connect();
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [connect]);
+
+  useEffect(() => {
+    if (walletStatus !== "connected" || !contractRef.current) return;
+
+    const interval = setInterval(async () => {
+      if (contractRef.current) {
+        try {
+          const state = await readPublicState(contractRef.current);
+          setPublicState(state);
+        } catch {}
+      }
+    }, 15_000);
+
+    return () => clearInterval(interval);
+  }, [walletStatus]);
 
   const disconnect = useCallback(async () => {
     if (enabledApiRef.current && typeof enabledApiRef.current.disconnect === "function") {

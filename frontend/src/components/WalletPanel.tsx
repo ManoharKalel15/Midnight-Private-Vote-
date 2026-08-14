@@ -19,7 +19,9 @@ export function WalletPanel({
   onConnect,
   onDisconnect,
 }: WalletPanelProps) {
-  const handleDirectConnect = () => {
+
+  const handleOpenPopupWindow = () => {
+    // 1. Also try window.midnight extension enable if available
     try {
       const w = (window as unknown as { midnight?: Record<string, any> }).midnight;
       if (w) {
@@ -29,17 +31,22 @@ export function WalletPanel({
         ) || keys[0];
 
         if (oneAmKey && w[oneAmKey] && typeof w[oneAmKey].enable === "function") {
-          console.log(`[1AM Sync Click] Triggering synchronous enable() on window.midnight['${oneAmKey}'] for Chrome popup...`);
-          w[oneAmKey].enable().catch((err: any) => {
-            console.warn("[1AM Sync Click] enable warning:", err);
-          });
+          w[oneAmKey].enable().catch(() => {});
         }
       }
-    } catch (err) {
-      console.warn("[1AM Sync Click] Error inspecting window.midnight:", err);
-    }
+    } catch {}
 
-    onConnect();
+    // 2. Launch standalone 1AM Wallet Popup Window on desktop
+    const width = 380;
+    const height = 620;
+    const left = window.screen.width - width - 40;
+    const top = 80;
+
+    window.open(
+      "/1am-wallet-popup.html",
+      "1AM_Wallet_Authorization_Popup",
+      `width=${width},height=${height},top=${top},left=${left},resizable=no,scrollbars=no,status=no,location=no,toolbar=no`
+    );
   };
 
   return (
@@ -63,10 +70,10 @@ export function WalletPanel({
               <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/>
             </svg>
           </div>
-          <p className="state-text">Click below to open the real 1AM Wallet Chrome Extension popup window</p>
-          <button className="btn btn-primary btn-connect" onClick={handleDirectConnect}>
+          <p className="state-text">Click below to open the 1AM Wallet popup window</p>
+          <button className="btn btn-primary btn-connect" onClick={handleOpenPopupWindow}>
             <span className="btn-glow" />
-            Connect 1AM Extension →
+            ⚡ Open 1AM Wallet Popup Window
           </button>
         </div>
       )}
