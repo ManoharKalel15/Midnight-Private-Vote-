@@ -1,10 +1,12 @@
-﻿import { defineConfig } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+import wasm from "vite-plugin-wasm";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    wasm(),
     react(),
     nodePolyfills({
       // Midnight.js SDK requires these Node.js built-in polyfills in the browser
@@ -16,19 +18,9 @@ export default defineConfig({
       },
     }),
   ],
-  resolve: {
-    alias: {
-      // Ensure correct ESM resolution for Midnight SDK packages
-      "readable-stream": "vite-compatible-readable-stream",
-    },
-  },
   optimizeDeps: {
-    // Force-include Midnight SDK for pre-bundling so Vite handles them correctly
-    include: [
-      "@midnight-ntwrk/dapp-connector-api",
-      "@midnight-ntwrk/midnight-js-contracts",
-      "@midnight-ntwrk/midnight-js-types",
-    ],
+    // Exclude WASM packages from pre-bundling so Vite handles them correctly
+    exclude: ["@midnightntwrk/ledger-v9"],
     esbuildOptions: {
       target: "es2022",
     },
@@ -38,6 +30,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
+          react: ["react", "react-dom"],
           midnight: [
             "@midnight-ntwrk/dapp-connector-api",
             "@midnight-ntwrk/midnight-js-contracts",
