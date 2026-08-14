@@ -1,7 +1,8 @@
-﻿import type { WalletStatus } from "../hooks/useMidnight";
+import type { WalletStatus } from "../hooks/useMidnight";
 
 interface WalletPanelProps {
   walletStatus: WalletStatus;
+  walletName?: string;
   walletAddressShort: string;
   networkId: string;
   errorMessage: string;
@@ -11,6 +12,7 @@ interface WalletPanelProps {
 
 export function WalletPanel({
   walletStatus,
+  walletName = "1AM Wallet",
   walletAddressShort,
   networkId,
   errorMessage,
@@ -27,7 +29,7 @@ export function WalletPanel({
             <circle cx="17" cy="12" r="1" fill="currentColor" stroke="none"/>
           </svg>
         </div>
-        <h2 className="card-title">Lace Wallet</h2>
+        <h2 className="card-title">{walletName}</h2>
         {walletStatus === "connected" && (
           <span className="network-badge">{networkId}</span>
         )}
@@ -36,14 +38,14 @@ export function WalletPanel({
       {walletStatus === "not_installed" && (
         <div className="wallet-state wallet-missing">
           <div className="state-icon warning">⚠</div>
-          <p>Lace wallet not detected.</p>
+          <p>1AM Wallet extension not detected.</p>
           <a
-            href="https://www.lace.io"
+            href="https://midnight.network"
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-secondary"
           >
-            Install Lace →
+            Get 1AM Wallet →
           </a>
         </div>
       )}
@@ -55,10 +57,10 @@ export function WalletPanel({
               <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/>
             </svg>
           </div>
-          <p className="state-text">Connect your Lace wallet to start voting privately</p>
+          <p className="state-text">Connect your {walletName} to start voting privately</p>
           <button className="btn btn-primary btn-connect" onClick={onConnect}>
             <span className="btn-glow" />
-            Connect Lace
+            Connect {walletName}
           </button>
         </div>
       )}
@@ -67,9 +69,9 @@ export function WalletPanel({
         <div className="wallet-state">
           <div className="spinner-ring" />
           <p className="state-text connecting-text">
-            Connecting to Lace on <strong>{networkId}</strong>…
+            Connecting to {walletName} on <strong>{networkId}</strong>…
           </p>
-          <p className="state-subtext">Approve the connection in your wallet</p>
+          <p className="state-subtext">Approve the connection prompt in your 1AM wallet extension</p>
         </div>
       )}
 
@@ -77,7 +79,7 @@ export function WalletPanel({
         <div className="wallet-connected">
           <div className="address-row">
             <div className="address-dot" />
-            <span className="address-label">Shielded Address</span>
+            <span className="address-label">Shielded Address ({walletName})</span>
           </div>
           <div className="address-box">
             <code className="address-code">{walletAddressShort}</code>

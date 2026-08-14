@@ -1,17 +1,11 @@
-﻿/**
+/**
  * midnight.ts — Wallet connect/disconnect + Midnight provider setup
  *
- * The DApp Connector API is injected by the Lace wallet into:
- *   window.midnight.mnLace
- *
- * Connection flow:
- *   1. detectWallet()      — check if Lace extension is present
- *   2. connectWallet()     — call .enable() then .connect('preprod')
- *   3. buildProviders()    — assemble all Midnight.js providers
- *   4. disconnectWallet()  — call .disconnect()
+ * The DApp Connector API is injected by Midnight 1AM Wallet / extensions into:
+ *   window.midnight
  */
 
-// Midnight DApp Connector API type (injected by Lace extension)
+// Midnight DApp Connector API type
 export interface MidnightConnectorAPI {
   apiVersion: string;
   name: string;
@@ -55,13 +49,49 @@ export const MIDNIGHT_CONFIG = {
   contractAddress: (import.meta.env.VITE_CONTRACT_ADDRESS as string) || "",
 } as const;
 
-// Detect Lace wallet
-export function detectWallet(): MidnightConnectorAPI | null {
+// Detected wallet info
+export interface DetectedWallet {
+  name: string;
+  api: MidnightConnectorAPI;
+}
+
+// Detect 1AM or Midnight wallet extension
+export function detectWallet(): DetectedWallet | null {
   try {
     const w = window as unknown as {
-      midnight?: { mnLace?: MidnightConnectorAPI };
+      midnight?: Record<string, MidnightConnectorAPI>;
     };
-    return w.midnight?.mnLace ?? null;
+    if (!w.midnight) return null;
+
+    const keys = Object.keys(w.midnight);
+
+    // 1. Prioritize 1AM Wallet specific keys
+    const oneAmKey = keys.find(
+      (k) =>
+        k.toLowerCase().includes("1am") ||
+        k.toLowerCase().includes("oneam")
+    );
+
+    if (oneAmKey && w.midnight[oneAmKey]) {
+      return {
+        name: "1AM Wallet",
+        api: w.midnight[oneAmKey],
+      };
+    }
+
+    // 2. Fallback to any injected Midnight DApp Connector wallet
+    for (const key of keys) {
+      const candidate = w.midnight[key];
+      if (candidate && typeof candidate.enable === "function") {
+        const walletName = candidate.name || (key.toLowerCase().includes("lace") ? "Lace Wallet" : "1AM Wallet");
+        return {
+          name: walletName,
+          api: candidate,
+        };
+      }
+    }
+
+    return null;
   } catch {
     return null;
   }
@@ -72,19 +102,20 @@ export interface WalletConnection {
   api: ConnectedAPI;
   address: string;
   networkId: string;
+  walletName: string;
 }
 
-// Connect to Lace wallet on Preprod
+// Connect to 1AM / Midnight wallet on Preprod
 export async function connectWallet(): Promise<WalletConnection> {
-  const connector = detectWallet();
-  if (!connector) {
+  const detected = detectWallet();
+  if (!detected) {
     throw new Error(
-      "Lace wallet not detected. Please install the Lace browser extension with Midnight support."
+      "1AM Wallet not detected. Please install or enable the 1AM Wallet extension for Midnight Network."
     );
   }
 
-  // Enable the connector (triggers wallet permission popup)
-  const enabledApi = await connector.enable();
+  // Enable the connector (triggers 1AM wallet permission popup)
+  const enabledApi = await detected.api.enable();
 
   // Connect to the configured network (preprod)
   const connectedApi = await enabledApi.connect(MIDNIGHT_CONFIG.networkId);
@@ -96,6 +127,7 @@ export async function connectWallet(): Promise<WalletConnection> {
     api: connectedApi,
     address,
     networkId: MIDNIGHT_CONFIG.networkId,
+    walletName: detected.name,
   };
 }
 

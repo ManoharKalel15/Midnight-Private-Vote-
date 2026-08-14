@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useMidnight.ts — React hook that orchestrates all Midnight DApp logic
  *
  * Manages the full lifecycle:
@@ -42,6 +42,7 @@ export type VoteStatus =
 export interface MidnightState {
   // Wallet state
   walletStatus: WalletStatus;
+  walletName: string;
   walletAddress: string;
   walletAddressShort: string;
   networkId: string;
@@ -72,6 +73,7 @@ const INITIAL_PUBLIC_STATE: PublicState = {
 
 export function useMidnight(): MidnightState {
   const [walletStatus, setWalletStatus] = useState<WalletStatus>("installed");
+  const [walletName, setWalletName] = useState("1AM Wallet");
   const [walletAddress, setWalletAddress] = useState("");
   const [networkId, setNetworkId] = useState(MIDNIGHT_CONFIG.networkId);
   const [errorMessage, setErrorMessage] = useState("");
@@ -96,11 +98,12 @@ export function useMidnight(): MidnightState {
   useEffect(() => {
     // Give the wallet extension a moment to inject itself
     const timer = setTimeout(() => {
-      const connector = detectWallet();
-      if (!connector) {
+      const detected = detectWallet();
+      if (!detected) {
         setWalletStatus("not_installed");
       } else {
         setWalletStatus("installed");
+        setWalletName(detected.name);
       }
     }, 500);
 
@@ -131,6 +134,7 @@ export function useMidnight(): MidnightState {
       connectionRef.current = connection;
       setWalletAddress(connection.address);
       setNetworkId(connection.networkId);
+      setWalletName(connection.walletName);
 
       // Deploy or find existing contract
       let contract: DeployedContract;
@@ -192,7 +196,6 @@ export function useMidnight(): MidnightState {
     setLastTxHash("");
 
     try {
-      // Step 1: Generate ZK proof (simulated as ~2-5s delay)
       let result: TransactionResult;
 
       setVoteStatus("submitting");
@@ -223,6 +226,7 @@ export function useMidnight(): MidnightState {
 
   return {
     walletStatus,
+    walletName,
     walletAddress,
     walletAddressShort: formatAddress(walletAddress),
     networkId,
