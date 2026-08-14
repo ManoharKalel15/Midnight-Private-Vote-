@@ -15,60 +15,150 @@ export function WalletModal({
   walletName = "1AM Wallet",
   networkId = "preprod",
 }: WalletModalProps) {
+  const [activeTab, setActiveTab] = useState<"assets" | "nfts" | "txs" | "apps">("apps");
   const [isApproving, setIsApproving] = useState(false);
 
   if (!isOpen) return null;
 
   const handleApprove = async () => {
     setIsApproving(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await new Promise((resolve) => setTimeout(resolve, 500));
     setIsApproving(false);
     onApprove();
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content wallet-popup-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <div className="popup-badge">
-            <span className="popup-icon">⚡</span>
-            <span>1AM Wallet DApp Connector</span>
-          </div>
-          <button className="modal-close-btn" onClick={onClose} aria-label="Close">✕</button>
-        </div>
-
-        <div className="popup-body">
-          <div className="wallet-avatar">
-            <span className="avatar-icon">🌙</span>
+      {/* 1AM Extension Window Mockup */}
+      <div className="oneam-extension-window" onClick={(e) => e.stopPropagation()}>
+        
+        {/* Top Header Bar */}
+        <div className="oneam-header">
+          <div className="oneam-brand">
+            <span className="oneam-clock-icon">🕒</span>
+            <span className="oneam-title">1AM</span>
           </div>
 
-          <h3 className="popup-title">Connect {walletName}?</h3>
-          <p className="popup-subtitle">
-            <strong>Rise In — Level 2 (Midnight Vote)</strong> requests permission to view your shielded address and cast ZK votes on <code>{networkId}</code>.
-          </p>
+          <div className="oneam-status-pills">
+            <div className="status-pill green">
+              <span className="dot" />
+              <span>PREV • SYNCED</span>
+            </div>
+            <div className="status-pill green">
+              <span className="dot" />
+              <span>DUST SPONSORED</span>
+            </div>
+          </div>
 
-          <div className="popup-permissions-box">
-            <div className="permission-item">
-              <span className="check">✓</span>
-              <span>View shielded Midnight address</span>
-            </div>
-            <div className="permission-item">
-              <span className="check">✓</span>
-              <span>Generate ZK-SNARK witness proofs locally</span>
-            </div>
-            <div className="permission-item">
-              <span className="check">✓</span>
-              <span>Submit zero-knowledge vote transactions</span>
-            </div>
+          <div className="oneam-header-right">
+            <button className="expand-btn" title="Expand view" onClick={onClose}>⤢</button>
+            <div className="avatar-box">WA</div>
           </div>
         </div>
 
-        <div className="popup-footer">
-          <button className="btn btn-secondary" onClick={onClose} disabled={isApproving}>
-            Cancel
+        {/* DApp Authorization Banner */}
+        <div className="oneam-dapp-banner">
+          <div className="banner-left">
+            <span className="banner-icon">⚡</span>
+            <div>
+              <div className="banner-title">Connection Requested</div>
+              <div className="banner-sub">Rise In — Level 2 (Midnight Vote)</div>
+            </div>
+          </div>
+          <button 
+            className="oneam-approve-btn" 
+            onClick={handleApprove} 
+            disabled={isApproving}
+          >
+            {isApproving ? "Connecting..." : "Approve Connect"}
           </button>
-          <button className="btn btn-primary btn-approve" onClick={handleApprove} disabled={isApproving}>
-            {isApproving ? "Connecting..." : "Approve Connection →"}
+        </div>
+
+        {/* Extension Body Content */}
+        <div className="oneam-body">
+          {/* Shielded Holdings */}
+          <div className="holdings-card">
+            <div className="card-top">
+              <div className="card-label">
+                <span className="shield-icon">🛡</span>
+                <span>SHIELDED HOLDINGS</span>
+              </div>
+              <button className="hide-btn">HIDE 👁</button>
+            </div>
+            <div className="balance-val">0</div>
+            <div className="card-subtext">Shielded tokens in this wallet</div>
+          </div>
+
+          {/* Unshielded Balance */}
+          <div className="holdings-card">
+            <div className="card-top">
+              <div className="card-label">
+                <span className="lightning-icon">⚡</span>
+                <span>UNSHIELDED BALANCE</span>
+              </div>
+              <button className="hide-btn">HIDE 👁</button>
+            </div>
+            <div className="balance-val">0.0</div>
+            <div className="card-subtext">Sum of all unshielded NIGHT tokens</div>
+          </div>
+
+          {/* Cardano Balance */}
+          <div className="holdings-card">
+            <div className="card-top">
+              <div className="card-label">
+                <span className="cardano-icon">❖</span>
+                <span>CARDANO BALANCE</span>
+              </div>
+              <button className="hide-btn">HIDE 👁</button>
+            </div>
+            <div className="balance-val">0.0</div>
+            <div className="card-subtext">ADA: 0.0</div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="oneam-actions">
+            <button className="action-btn">
+              <span className="action-icon">✈</span>
+              <span>SEND</span>
+            </button>
+            <div className="divider" />
+            <button className="action-btn">
+              <span className="action-icon">⊞</span>
+              <span>RECEIVE</span>
+            </button>
+            <div className="divider" />
+            <button className="action-btn">
+              <span className="action-icon">⚡</span>
+              <span>YOUR DUST</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom Navigation Tabs */}
+        <div className="oneam-tabs">
+          <button 
+            className={`tab ${activeTab === "assets" ? "active" : ""}`}
+            onClick={() => setActiveTab("assets")}
+          >
+            ASSETS
+          </button>
+          <button 
+            className={`tab ${activeTab === "nfts" ? "active" : ""}`}
+            onClick={() => setActiveTab("nfts")}
+          >
+            NFTS
+          </button>
+          <button 
+            className={`tab ${activeTab === "txs" ? "active" : ""}`}
+            onClick={() => setActiveTab("txs")}
+          >
+            TRANSACTIONS
+          </button>
+          <button 
+            className={`tab ${activeTab === "apps" ? "active" : ""}`}
+            onClick={() => setActiveTab("apps")}
+          >
+            APPS
           </button>
         </div>
       </div>
