@@ -19,6 +19,29 @@ export function WalletPanel({
   onConnect,
   onDisconnect,
 }: WalletPanelProps) {
+  const handleDirectConnect = () => {
+    try {
+      const w = (window as unknown as { midnight?: Record<string, any> }).midnight;
+      if (w) {
+        const keys = Object.keys(w);
+        const oneAmKey = keys.find(
+          (k) => k === "1am" || k === "1AM" || k.toLowerCase().includes("1am")
+        ) || keys[0];
+
+        if (oneAmKey && w[oneAmKey] && typeof w[oneAmKey].enable === "function") {
+          console.log(`[1AM Sync Click] Triggering synchronous enable() on window.midnight['${oneAmKey}'] for Chrome popup...`);
+          w[oneAmKey].enable().catch((err: any) => {
+            console.warn("[1AM Sync Click] enable warning:", err);
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("[1AM Sync Click] Error inspecting window.midnight:", err);
+    }
+
+    onConnect();
+  };
+
   return (
     <div className="card wallet-card">
       <div className="card-header">
@@ -30,37 +53,21 @@ export function WalletPanel({
           </svg>
         </div>
         <h2 className="card-title">{walletName}</h2>
-        {walletStatus === "connected" ? (
-          <span className="network-badge">{networkId}</span>
-        ) : (
-          <span className="network-badge" style={{ background: "rgba(139, 92, 246, 0.2)", color: "#a78bfa" }}>
-            PREPROD
-          </span>
-        )}
+        <span className="network-badge">{networkId}</span>
       </div>
 
-      {walletStatus !== "connected" && walletStatus !== "connecting" && (
+      {walletStatus !== "connected" && (
         <div className="wallet-state">
           <div className="state-icon idle">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/>
             </svg>
           </div>
-          <p className="state-text">Click below to connect your 1AM Wallet and start voting privately</p>
-          <button className="btn btn-primary btn-connect" onClick={onConnect}>
+          <p className="state-text">Click below to open the real 1AM Wallet Chrome Extension popup window</p>
+          <button className="btn btn-primary btn-connect" onClick={handleDirectConnect}>
             <span className="btn-glow" />
-            Connect 1AM Wallet
+            Connect 1AM Extension →
           </button>
-        </div>
-      )}
-
-      {walletStatus === "connecting" && (
-        <div className="wallet-state">
-          <div className="spinner-ring" />
-          <p className="state-text connecting-text">
-            Connecting to 1AM Wallet on <strong>{networkId}</strong>…
-          </p>
-          <p className="state-subtext">Authorizing connection with 1AM Wallet</p>
         </div>
       )}
 
@@ -76,10 +83,7 @@ export function WalletPanel({
               🛡️
             </div>
           </div>
-          <button
-            className="btn btn-danger btn-sm"
-            onClick={onDisconnect}
-          >
+          <button className="btn btn-danger btn-sm" onClick={onDisconnect}>
             Disconnect
           </button>
         </div>
