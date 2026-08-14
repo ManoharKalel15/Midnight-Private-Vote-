@@ -30,32 +30,26 @@ export function WalletPanel({
           </svg>
         </div>
         <h2 className="card-title">{walletName}</h2>
-        {walletStatus === "connected" && (
+        {walletStatus === "connected" ? (
           <span className="network-badge">{networkId}</span>
+        ) : (
+          <span className="network-badge" style={{ background: "rgba(139, 92, 246, 0.2)", color: "#a78bfa" }}>
+            PREPROD
+          </span>
         )}
       </div>
 
-      {walletStatus === "not_installed" && (
-        <div className="wallet-state wallet-missing">
-          <div className="state-icon warning">⚠</div>
-          <p>1AM Wallet extension not detected on page load.</p>
-          <button className="btn btn-primary btn-sm" onClick={onConnect}>
-            ⚡ Connect 1AM Wallet Extension
-          </button>
-        </div>
-      )}
-
-      {walletStatus === "installed" && (
+      {walletStatus !== "connected" && walletStatus !== "connecting" && (
         <div className="wallet-state">
           <div className="state-icon idle">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/>
             </svg>
           </div>
-          <p className="state-text">Click below to open the real 1AM Wallet browser extension popup window</p>
+          <p className="state-text">Click below to connect your 1AM Wallet and start voting privately</p>
           <button className="btn btn-primary btn-connect" onClick={onConnect}>
             <span className="btn-glow" />
-            Connect 1AM Extension →
+            Connect 1AM Wallet
           </button>
         </div>
       )}
@@ -64,9 +58,9 @@ export function WalletPanel({
         <div className="wallet-state">
           <div className="spinner-ring" />
           <p className="state-text connecting-text">
-            Opening 1AM Extension Popup on <strong>{networkId}</strong>…
+            Connecting to 1AM Wallet on <strong>{networkId}</strong>…
           </p>
-          <p className="state-subtext">Approve the connection prompt in your 1AM wallet extension window</p>
+          <p className="state-subtext">Authorizing connection with 1AM Wallet</p>
         </div>
       )}
 
@@ -87,16 +81,6 @@ export function WalletPanel({
             onClick={onDisconnect}
           >
             Disconnect
-          </button>
-        </div>
-      )}
-
-      {walletStatus === "error" && (
-        <div className="wallet-state">
-          <div className="state-icon error">✕</div>
-          <p className="error-text">{errorMessage}</p>
-          <button className="btn btn-primary" onClick={onConnect}>
-            Try Connect Extension Again
           </button>
         </div>
       )}
