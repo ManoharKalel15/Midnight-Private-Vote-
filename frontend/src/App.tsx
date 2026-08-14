@@ -1,6 +1,5 @@
 import { useMidnight } from "./hooks/useMidnight";
 import { WalletPanel } from "./components/WalletPanel";
-import { WalletModal } from "./components/WalletModal";
 import { VotePanel } from "./components/VotePanel";
 import { PublicStateDisplay } from "./components/PublicState";
 import { PrivacyClaim } from "./components/PrivacyClaim";
@@ -15,15 +14,6 @@ export default function App() {
       <div className="bg-orb bg-orb-1" />
       <div className="bg-orb bg-orb-2" />
       <div className="bg-orb bg-orb-3" />
-
-      {/* 1AM Wallet Popup Modal */}
-      <WalletModal
-        isOpen={midnight.isModalOpen}
-        onClose={midnight.closeModal}
-        onApprove={midnight.connect}
-        walletName={midnight.walletName}
-        networkId={midnight.networkId}
-      />
 
       {/* Header */}
       <header className="app-header">
@@ -75,7 +65,7 @@ export default function App() {
             walletAddressShort={midnight.walletAddressShort}
             networkId={midnight.networkId}
             errorMessage={midnight.errorMessage}
-            onOpenModal={midnight.openModal}
+            onConnect={midnight.connect}
             onDisconnect={midnight.disconnect}
           />
           <VotePanel

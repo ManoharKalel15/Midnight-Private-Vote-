@@ -1,7 +1,5 @@
 /**
- * midnight.ts — Wallet connect/disconnect + Midnight provider setup
- *
- * Supports 1AM Wallet injection & seamless fallback popup connection.
+ * midnight.ts — Direct connection to REAL 1AM Wallet Chrome Extension
  */
 
 export interface MidnightConnectorAPI {
@@ -103,59 +101,66 @@ export interface WalletConnection {
   walletName: string;
 }
 
+// Direct connection to real 1AM extension popup
 export async function connectWallet(): Promise<WalletConnection> {
-  const detected = detectWallet();
-
-  if (detected) {
-    try {
-      const enabledApi = await detected.api.enable();
-      let connectedApi: ConnectedAPI;
-
-      if (enabledApi && typeof enabledApi.connect === "function") {
-        try {
-          connectedApi = await enabledApi.connect(MIDNIGHT_CONFIG.networkId);
-        } catch {
-          connectedApi = enabledApi as unknown as ConnectedAPI;
-        }
-      } else {
-        connectedApi = enabledApi as unknown as ConnectedAPI;
-      }
-
-      let address = "";
-      if (typeof connectedApi.getShieldedAddress === "function") {
-        address = await connectedApi.getShieldedAddress();
-      } else if (typeof (enabledApi as any).getShieldedAddress === "function") {
-        address = await (enabledApi as any).getShieldedAddress();
-      }
-
-      if (!address) {
-        address = "mn_shielded_1am_" + Math.random().toString(36).substring(2, 10);
-      }
-
-      return {
-        api: connectedApi,
-        address,
-        networkId: MIDNIGHT_CONFIG.networkId,
-        walletName: detected.name,
-      };
-    } catch (err) {
-      console.warn("[1AM Wallet] Extension enable fallback:", err);
-    }
-  }
-
-  // 1AM Wallet connection instance
-  const mockAddress = "mn_shielded_1am_" + Math.random().toString(36).substring(2, 10);
-  const mockApi: ConnectedAPI = {
-    getShieldedAddress: async () => mockAddress,
-    balances: async () => ({ night: 1000000n, dust: 50000n }),
-    state: async () => ({ networkId: MIDNIGHT_CONFIG.networkId, address: mockAddress }),
+  const w = window as unknown as {
+    midnight?: Record<string, MidnightConnectorAPI>;
   };
 
+  if (!w.midnight) {
+    throw new Error(
+      "1AM Wallet extension not found on window.midnight. Please ensure 1AM Wallet browser extension is installed & enabled."
+    );
+  }
+
+  const keys = Object.keys(w.midnight);
+  const oneAmKey = keys.find(
+    (k) =>
+      k === "1AM" ||
+      k === "1am" ||
+      k.toLowerCase().includes("1am") ||
+      k.toLowerCase().includes("oneam")
+  );
+
+  const keyToUse = oneAmKey || keys[0];
+  const provider = w.midnight[keyToUse];
+
+  if (!provider || typeof provider.enable !== "function") {
+    throw new Error("1AM Wallet provider method enable() is missing on window.midnight.");
+  }
+
+  console.log(`[1AM Wallet] Calling real extension enable() on window.midnight['${keyToUse}']...`);
+
+  // Call real extension .enable() directly -> THIS OPENS THE REAL EXTENSION POPUP!
+  const enabledApi = await provider.enable();
+
+  let connectedApi: ConnectedAPI;
+  if (enabledApi && typeof enabledApi.connect === "function") {
+    try {
+      connectedApi = await enabledApi.connect(MIDNIGHT_CONFIG.networkId);
+    } catch {
+      connectedApi = enabledApi as unknown as ConnectedAPI;
+    }
+  } else {
+    connectedApi = enabledApi as unknown as ConnectedAPI;
+  }
+
+  let address = "";
+  if (typeof connectedApi.getShieldedAddress === "function") {
+    address = await connectedApi.getShieldedAddress();
+  } else if (typeof (enabledApi as any).getShieldedAddress === "function") {
+    address = await (enabledApi as any).getShieldedAddress();
+  }
+
+  if (!address) {
+    address = "mn_shielded_1am_" + Math.random().toString(36).substring(2, 10);
+  }
+
   return {
-    api: mockApi,
-    address: mockAddress,
+    api: connectedApi,
+    address,
     networkId: MIDNIGHT_CONFIG.networkId,
-    walletName: "1AM Wallet",
+    walletName: provider.name || "1AM Wallet",
   };
 }
 

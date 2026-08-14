@@ -39,7 +39,6 @@ export interface MidnightState {
   walletAddressShort: string;
   networkId: string;
   errorMessage: string;
-  isModalOpen: boolean;
 
   contractAddress: string;
   explorerUrl: string;
@@ -49,8 +48,6 @@ export interface MidnightState {
   lastTxHash: string;
   voteError: string;
 
-  openModal: () => void;
-  closeModal: () => void;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   vote: (choice: boolean) => Promise<void>;
@@ -69,7 +66,6 @@ export function useMidnight(): MidnightState {
   const [walletAddress, setWalletAddress] = useState("");
   const [networkId, setNetworkId] = useState(MIDNIGHT_CONFIG.networkId);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [contractAddress, setContractAddress] = useState(
     MIDNIGHT_CONFIG.contractAddress
@@ -89,8 +85,10 @@ export function useMidnight(): MidnightState {
   useEffect(() => {
     const timer = setTimeout(() => {
       const detected = detectWallet();
-      setWalletStatus("installed");
-      if (detected) {
+      if (!detected) {
+        setWalletStatus("not_installed");
+      } else {
+        setWalletStatus("installed");
         setWalletName(detected.name);
       }
     }, 300);
@@ -111,19 +109,12 @@ export function useMidnight(): MidnightState {
     return () => clearInterval(interval);
   }, [walletStatus]);
 
-  const openModal = useCallback(() => {
-    setIsModalOpen(true);
-  }, []);
-
-  const closeModal = useCallback(() => {
-    setIsModalOpen(false);
-  }, []);
-
   const connect = useCallback(async () => {
     setWalletStatus("connecting");
     setErrorMessage("");
 
     try {
+      // Connect directly to REAL 1AM extension window.midnight
       const connection = await connectWallet();
       connectionRef.current = connection;
       setWalletAddress(connection.address);
@@ -148,7 +139,6 @@ export function useMidnight(): MidnightState {
       setPublicState(state);
 
       setWalletStatus("connected");
-      setIsModalOpen(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setErrorMessage(msg);
@@ -172,7 +162,6 @@ export function useMidnight(): MidnightState {
     setLastTxHash("");
     setVoteStatus("idle");
     setVoteError("");
-    setIsModalOpen(false);
   }, []);
 
   const vote = useCallback(async (choice: boolean) => {
@@ -218,15 +207,12 @@ export function useMidnight(): MidnightState {
     walletAddressShort: formatAddress(walletAddress),
     networkId,
     errorMessage,
-    isModalOpen,
     contractAddress,
     explorerUrl: contractAddress ? getExplorerUrl(contractAddress) : "",
     publicState,
     voteStatus,
     lastTxHash,
     voteError,
-    openModal,
-    closeModal,
     connect,
     disconnect,
     vote,
