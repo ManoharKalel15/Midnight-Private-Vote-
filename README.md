@@ -1,9 +1,10 @@
 ﻿# 🌒 Midnight Private Vote — Rise In Level 2
 
-> **The First Thread of Light** — Contract wired to a frontend UI, with Lace connected on Preprod.
+> **The First Thread of Light** — Contract wired to a frontend UI, with 1AM Wallet connected on Preprod.
 
 A privacy-preserving voting DApp built on [Midnight Network](https://midnight.network), demonstrating zero-knowledge proofs through a practical, beautiful interface.
 
+[![Video Demo](https://img.shields.io/badge/Video%20Demo-Loom-625df5?logo=loom)](https://www.loom.com/share/29657ab4159145f0854329aca6cc6e91)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-black?logo=vercel)](https://your-demo-url.vercel.app)
 [![Network](https://img.shields.io/badge/Network-Midnight%20Preprod-8b5cf6)](https://midnight.network)
 [![Contract](https://img.shields.io/badge/Contract-Preprod%20Deployed-34d399)](#contract-address)
@@ -125,25 +126,26 @@ npm run compile-contract
 
 ---
 
-## 🔌 Connecting Lace Wallet
+## 🔌 Connecting 1AM Wallet
 
-1. Install the [Lace extension](https://www.lace.io) in Chrome/Brave
-2. Enable the **Midnight** network in Lace settings
-3. Switch to **Preprod** testnet
-4. Get testnet tNIGHT tokens from the [Midnight faucet](https://faucet.midnight.network)
-5. Open the DApp → click **Connect Lace**
+1. Install/enable the 1AM Wallet extension in Chrome/Brave
+2. Ensure the **Midnight Preprod** testnet is selected
+3. Click **Connect 1AM Extension** to open the 1AM Wallet standalone popup window
+4. Click **⚡ Approve 1AM Connection** in the popup window
 
 ---
 
 ## 📹 Demo Video
 
-_[Link to demo video — wallet connect + circuit call]_
+🎥 **[Watch the Loom Video Demo](https://www.loom.com/share/29657ab4159145f0854329aca6cc6e91)**
+
+> Demonstrates 1AM Wallet connection, ZK proof generation, on-chain state update, and observable privacy claims.
 
 ---
 
 ## 🎯 Requirements Checklist
 
-- [x] Lace wallet connect / disconnect implemented
+- [x] 1AM Wallet connect / disconnect & standalone popup window implemented
 - [x] Circuit (`cast_vote`) called successfully from the frontend
 - [x] Observable privacy behavior (vote proven without being shown)
 - [x] Contract deployed to Preprod with verifiable address
