@@ -5,7 +5,7 @@
 A privacy-preserving voting DApp built on [Midnight Network](https://midnight.network), demonstrating zero-knowledge proofs through a practical, beautiful interface.
 
 [![Video Demo](https://img.shields.io/badge/Video%20Demo-Loom-625df5?logo=loom)](https://www.loom.com/share/29657ab4159145f0854329aca6cc6e91)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-black?logo=vercel)](https://your-demo-url.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-black?logo=vercel)](https://midnight-private-vote-frontend-hzyr.vercel.app/)
 [![Network](https://img.shields.io/badge/Network-Midnight%20Preprod-8b5cf6)](https://midnight.network)
 [![Contract](https://img.shields.io/badge/Contract-Preprod%20Deployed-34d399)](#contract-address)
 
