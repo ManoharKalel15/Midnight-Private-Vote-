@@ -81,9 +81,14 @@ export function useMidnight(): MidnightState {
   const connectionRef = useRef<WalletConnection | null>(null);
   const enabledApiRef = useRef<EnabledAPI | null>(null);
   const contractRef = useRef<DeployedContract | null>(null);
+  const isConnectingRef = useRef(false);
 
+  // Single detection check on mount to prevent duplicate event listeners
   useEffect(() => {
-    const timer = setTimeout(() => {
+    let mounted = true;
+
+    const checkWallet = () => {
+      if (!mounted) return;
       const detected = detectWallet();
       if (!detected) {
         setWalletStatus("not_installed");
@@ -91,30 +96,39 @@ export function useMidnight(): MidnightState {
         setWalletStatus("installed");
         setWalletName(detected.name);
       }
-    }, 300);
+    };
 
-    return () => clearTimeout(timer);
+    checkWallet();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
+  // Poll contract state only when connected
   useEffect(() => {
     if (walletStatus !== "connected" || !contractRef.current) return;
 
     const interval = setInterval(async () => {
       if (contractRef.current) {
-        const state = await readPublicState(contractRef.current);
-        setPublicState(state);
+        try {
+          const state = await readPublicState(contractRef.current);
+          setPublicState(state);
+        } catch {
+          // Ignore transient polling errors
+        }
       }
-    }, 10_000);
+    }, 15_000);
 
     return () => clearInterval(interval);
   }, [walletStatus]);
 
   const connect = useCallback(async () => {
+    if (isConnectingRef.current) return;
+    isConnectingRef.current = true;
     setWalletStatus("connecting");
     setErrorMessage("");
 
     try {
-      // Connect directly to REAL 1AM extension window.midnight
       const connection = await connectWallet();
       connectionRef.current = connection;
       setWalletAddress(connection.address);
@@ -143,6 +157,8 @@ export function useMidnight(): MidnightState {
       const msg = err instanceof Error ? err.message : String(err);
       setErrorMessage(msg);
       setWalletStatus("error");
+    } finally {
+      isConnectingRef.current = false;
     }
   }, []);
 
@@ -196,8 +212,10 @@ export function useMidnight(): MidnightState {
 
   const refreshState = useCallback(async () => {
     if (!contractRef.current) return;
-    const state = await readPublicState(contractRef.current);
-    setPublicState(state);
+    try {
+      const state = await readPublicState(contractRef.current);
+      setPublicState(state);
+    } catch {}
   }, []);
 
   return {
