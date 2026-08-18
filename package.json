@@ -5,7 +5,8 @@
   "description": "Rise In Level 2 — Midnight Network DApp with Lace wallet, Compact contract, and ZK proofs on Preprod",
   "workspaces": [
     "contract",
-    "frontend"
+    "frontend",
+    "packages/*"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=frontend",

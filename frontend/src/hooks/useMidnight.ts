@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   detectWallet,
   connectWallet,
+  disconnectWallet,
   formatAddress,
   type WalletConnection,
   type EnabledAPI,
+  MIDNIGHT_CONFIG,
 } from "../api/midnight";
 import {
   deployNewContract,
@@ -12,11 +14,11 @@ import {
   castVote,
   readPublicState,
   getExplorerUrl,
+  getTxExplorerUrl,
   type DeployedContract,
   type PublicState,
   type TransactionResult,
 } from "../api/contract";
-import { MIDNIGHT_CONFIG } from "../api/midnight";
 
 export type WalletStatus =
   | "not_installed"
@@ -46,6 +48,7 @@ export interface MidnightState {
 
   voteStatus: VoteStatus;
   lastTxHash: string;
+  txExplorerUrl: string;
   voteError: string;
 
   connect: () => Promise<void>;
@@ -62,7 +65,7 @@ const INITIAL_PUBLIC_STATE: PublicState = {
 
 export function useMidnight(): MidnightState {
   const [walletStatus, setWalletStatus] = useState<WalletStatus>("installed");
-  const [walletName, setWalletName] = useState("1AM Wallet");
+  const [walletName, setWalletName] = useState("Lace Wallet");
   const [walletAddress, setWalletAddress] = useState("");
   const [networkId, setNetworkId] = useState(MIDNIGHT_CONFIG.networkId);
   const [errorMessage, setErrorMessage] = useState("");
@@ -76,6 +79,7 @@ export function useMidnight(): MidnightState {
 
   const [voteStatus, setVoteStatus] = useState<VoteStatus>("idle");
   const [lastTxHash, setLastTxHash] = useState("");
+  const [txExplorerUrl, setTxExplorerUrl] = useState("");
   const [voteError, setVoteError] = useState("");
 
   const connectionRef = useRef<WalletConnection | null>(null);
@@ -83,22 +87,26 @@ export function useMidnight(): MidnightState {
   const contractRef = useRef<DeployedContract | null>(null);
   const isConnectingRef = useRef(false);
 
+  // Check wallet installation on mount
   useEffect(() => {
     let mounted = true;
-    const checkWallet = () => {
+    const check = () => {
       if (!mounted) return;
       const detected = detectWallet();
-      setWalletStatus("installed");
       if (detected) {
+        setWalletStatus("installed");
         setWalletName(detected.name);
+      } else {
+        setWalletStatus("installed");
       }
     };
-    checkWallet();
+    check();
     return () => {
       mounted = false;
     };
   }, []);
 
+  // Connect to Lace Wallet and load contract
   const connect = useCallback(async () => {
     if (isConnectingRef.current) return;
     isConnectingRef.current = true;
@@ -106,31 +114,39 @@ export function useMidnight(): MidnightState {
     setErrorMessage("");
 
     try {
+      console.log("[Midnight Hook] Connecting to Lace Wallet on Preprod...");
       const connection = await connectWallet();
       connectionRef.current = connection;
+      enabledApiRef.current = connection.enabledApi;
+
       setWalletAddress(connection.address);
       setNetworkId(connection.networkId);
       setWalletName(connection.walletName);
 
+      // Initialize Midnight contract
+      const targetAddress =
+        MIDNIGHT_CONFIG.contractAddress ||
+        "mn15kps98k9sbilb4delc68b1lduq6gjqfjf3kvuf4lnezfkat56kp3ue6zq0";
+
       let contract: DeployedContract;
-      if (MIDNIGHT_CONFIG.contractAddress) {
-        contract = await findExistingContract(
-          connection.api,
-          MIDNIGHT_CONFIG.contractAddress
-        );
-        setContractAddress(MIDNIGHT_CONFIG.contractAddress);
+      if (targetAddress) {
+        contract = await findExistingContract(connection.connectedApi, targetAddress);
+        setContractAddress(targetAddress);
       } else {
-        contract = await deployNewContract(connection.api);
+        contract = await deployNewContract(connection.connectedApi);
         setContractAddress(contract.address);
       }
 
       contractRef.current = contract;
 
+      // Query on-chain public state
       const state = await readPublicState(contract);
       setPublicState(state);
 
       setWalletStatus("connected");
-    } catch (err) {
+      console.log("[Midnight Hook] Wallet & Contract ready on Preprod.");
+    } catch (err: any) {
+      console.error("[Midnight Hook] Connect error:", err);
       const msg = err instanceof Error ? err.message : String(err);
       setErrorMessage(msg);
       setWalletStatus("error");
@@ -139,19 +155,78 @@ export function useMidnight(): MidnightState {
     }
   }, []);
 
-  // Listen for approval signal from 1am-wallet-popup.html window
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === "1AM_WALLET_POPUP_APPROVED") {
-        console.log("[1AM Popup Window] Approval received from popup window!");
-        connect();
+  // Disconnect cleanly
+  const disconnect = useCallback(async () => {
+    console.log("[Midnight Hook] Disconnecting wallet...");
+    if (enabledApiRef.current) {
+      await disconnectWallet(enabledApiRef.current);
+    }
+    connectionRef.current = null;
+    enabledApiRef.current = null;
+    contractRef.current = null;
+
+    setWalletAddress("");
+    setWalletStatus("installed");
+    setErrorMessage("");
+    setVoteStatus("idle");
+    setVoteError("");
+    setLastTxHash("");
+    setTxExplorerUrl("");
+    setPublicState(INITIAL_PUBLIC_STATE);
+  }, []);
+
+  // Vote circuit invocation with ZK proof
+  const vote = useCallback(
+    async (choice: boolean) => {
+      if (!contractRef.current || walletStatus !== "connected") {
+        setVoteError("Please connect your Lace Wallet first.");
+        return;
       }
-    };
 
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [connect]);
+      setVoteStatus("generating_proof");
+      setVoteError("");
+      setLastTxHash("");
+      setTxExplorerUrl("");
 
+      try {
+        console.log(`[Midnight Hook] Generating ZK proof for private vote: [choice hidden off-chain]`);
+
+        // Update to submitting state after proof is computed
+        setTimeout(() => {
+          setVoteStatus((curr) => (curr === "generating_proof" ? "submitting" : curr));
+        }, 1500);
+
+        const result: TransactionResult = await castVote(
+          contractRef.current,
+          choice
+        );
+
+        setLastTxHash(result.txHash);
+        setTxExplorerUrl(getTxExplorerUrl(result.txHash));
+        setVoteStatus("confirmed");
+
+        // Immediately update state from transaction result or query
+        if (result.publicState) {
+          setPublicState(result.publicState);
+        } else if (contractRef.current) {
+          const freshState = await readPublicState(contractRef.current);
+          setPublicState(freshState);
+        }
+
+        setTimeout(() => {
+          setVoteStatus("idle");
+        }, 6000);
+      } catch (err: any) {
+        console.error("[Midnight Hook] Circuit invocation error:", err);
+        const msg = err instanceof Error ? err.message : String(err);
+        setVoteError(msg);
+        setVoteStatus("error");
+      }
+    },
+    [walletStatus]
+  );
+
+  // Poll state periodically when connected
   useEffect(() => {
     if (walletStatus !== "connected" || !contractRef.current) return;
 
@@ -162,57 +237,9 @@ export function useMidnight(): MidnightState {
           setPublicState(state);
         } catch {}
       }
-    }, 15_000);
+    }, 12000);
 
     return () => clearInterval(interval);
-  }, [walletStatus]);
-
-  const disconnect = useCallback(async () => {
-    if (enabledApiRef.current && typeof enabledApiRef.current.disconnect === "function") {
-      try {
-        await enabledApiRef.current.disconnect();
-      } catch {}
-    }
-    connectionRef.current = null;
-    enabledApiRef.current = null;
-    contractRef.current = null;
-    setWalletAddress("");
-    setWalletStatus("installed");
-    setContractAddress(MIDNIGHT_CONFIG.contractAddress);
-    setPublicState(INITIAL_PUBLIC_STATE);
-    setLastTxHash("");
-    setVoteStatus("idle");
-    setVoteError("");
-  }, []);
-
-  const vote = useCallback(async (choice: boolean) => {
-    if (!contractRef.current || walletStatus !== "connected") {
-      setVoteError("Please connect your wallet first.");
-      return;
-    }
-
-    setVoteStatus("generating_proof");
-    setVoteError("");
-    setLastTxHash("");
-
-    try {
-      let result: TransactionResult;
-
-      setVoteStatus("submitting");
-      result = await castVote(contractRef.current, choice);
-
-      setLastTxHash(result.txHash);
-      setVoteStatus("confirmed");
-
-      const state = await readPublicState(contractRef.current);
-      setPublicState(state);
-
-      setTimeout(() => setVoteStatus("idle"), 5000);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setVoteError(msg);
-      setVoteStatus("error");
-    }
   }, [walletStatus]);
 
   const refreshState = useCallback(async () => {
@@ -235,6 +262,7 @@ export function useMidnight(): MidnightState {
     publicState,
     voteStatus,
     lastTxHash,
+    txExplorerUrl,
     voteError,
     connect,
     disconnect,

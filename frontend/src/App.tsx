@@ -21,7 +21,7 @@ export default function App() {
           <div className="logo-area">
             <div className="logo-icon">🌙</div>
             <div className="logo-text">
-              <span className="logo-name">1AM Wallet</span>
+              <span className="logo-name">Lace Wallet</span>
               <span className="logo-sep"> · </span>
               <span className="logo-sub">Midnight Preprod</span>
             </div>
@@ -29,7 +29,7 @@ export default function App() {
           <div className="header-right">
             <div className="crescent-badge">
               <span className="crescent">🌒</span>
-              <span className="crescent-label">Rise In — Level 2</span>
+              <span className="crescent-label">Rise In — Level 2 (Waxing Crescent)</span>
             </div>
           </div>
         </div>
@@ -42,14 +42,14 @@ export default function App() {
           <span className="gradient-text">Midnight Network</span>
         </h1>
         <p className="hero-sub">
-          Cast a YES or NO vote with a zero-knowledge proof using 1AM Wallet.{" "}
+          Cast a YES or NO vote with a zero-knowledge proof using Lace Wallet.{" "}
           <br />
           Only the tally is public — your choice is{" "}
           <strong>cryptographically private</strong>.
         </p>
         <div className="hero-pills">
           <span className="pill">⚡ ZK-SNARK Proofs</span>
-          <span className="pill">🛡 1AM Shielded Wallet</span>
+          <span className="pill">🛡 Lace Shielded Wallet</span>
           <span className="pill">⛓ Preprod Testnet</span>
           <span className="pill">🔒 Compact Contract</span>
         </div>
@@ -72,6 +72,7 @@ export default function App() {
             isConnected={isConnected}
             voteStatus={midnight.voteStatus}
             lastTxHash={midnight.lastTxHash}
+            txExplorerUrl={midnight.txExplorerUrl}
             voteError={midnight.voteError}
             onVote={midnight.vote}
           />
@@ -96,7 +97,7 @@ export default function App() {
           <strong>Rise In — Level 2: The First Thread of Light</strong>
         </p>
         <p className="footer-sub">
-          Midnight Network · Compact Contract · 1AM DApp Connector · ZK Proofs
+          Midnight Network · Compact Contract · Midnight.js Providers · Lace DApp Connector · ZK Proofs
         </p>
       </footer>
     </div>
